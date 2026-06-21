@@ -1,1 +1,13 @@
+/ {
+    aliases {
+        led0 = &status_led;
+    };
 
+    leds {
+        compatible = "gpio-leds";
+        status_led: led_0 {
+            gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;
+            label = "User LED (P0.29)";
+        };
+    };
+};
