@@ -1,4 +1,4 @@
-name: Zephyr Build
+name: Zephyr Build - HolyIoT YJ-17095
 
 on:
   push:
@@ -10,22 +10,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          submodules: recursive   # if using west init in repo
+          submodules: recursive
 
       - name: Setup Zephyr
         uses: zephyrproject-rtos/action-zephyr-setup@v1
         with:
-          app-path: app          # path to your app
+          app-path: app
           toolchains: arm-zephyr-eabi
 
       - name: West Update
-        run: |
-          west update --narrow
+        run: west update --narrow
 
-      - name: Build for HolyIoT YJ-17095
-        run: |
-          west build -b holyiot_yj17095 --pristine app -d build
-          # Or for blinky sample:
-          # west build -b holyiot_yj17095 samples/basic/blinky
+      - name: Build
+        run: west build -b holyiot_yj17095 app --pristine
