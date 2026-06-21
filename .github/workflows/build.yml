@@ -1,20 +1,22 @@
-name: Build Zephyr Firmware
+name: Build Firmware
 
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    container:
-      image: ghcr.io/zephyrproject-rtos/ci:v0.27.4
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Initialize workspace
+      - name: Setup Zephyr
+        uses: zephyrproject-rtos/action-zephyr-setup@v1
+
+      - name: West Init
         run: |
           west init -l .
           west update
@@ -22,10 +24,12 @@ jobs:
 
       - name: Build
         run: |
-          west build -b nrf52dk/nrf52832 .
+          west build -p always -b nrf52dk/nrf52832 .
 
       - name: Upload HEX
         uses: actions/upload-artifact@v4
         with:
           name: firmware
-          path: build/zephyr/*.hex
+          path: |
+            build/zephyr/zephyr.hex
+            build/zephyr/zephyr.bin
