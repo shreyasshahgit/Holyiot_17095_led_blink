@@ -1,36 +1,31 @@
-name: Zephyr Build - HolyIoT YJ-17095
+name: Build Firmware
 
 on:
   push:
-    branches: [ main ]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
-      - name: Setup Zephyr Environment
+      - name: Install Zephyr
         uses: zephyrproject-rtos/action-zephyr-setup@v1
         with:
           app-path: app
-          toolchains: arm-zephyr-eabi
 
-      - name: Initialize West
+      - name: Update West
+        run: west update
+
+      - name: Build
         run: |
-          west init -l . --mf west.yml
-          west update --narrow
+          west build -s app -b holyiot_yj17095 -d build
 
-      - name: Build Firmware
-        run: |
-          west build -b holyiot_yj17095 app --pristine -d build
-
-      - name: Upload firmware
+      - name: Upload HEX
         uses: actions/upload-artifact@v4
         with:
           name: firmware
