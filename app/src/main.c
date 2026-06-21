@@ -1,30 +1,23 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
 
-#define LED_NODE DT_ALIAS(led0)
-#define LED_LABEL DT_LABEL(LED_NODE)
-
-static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED_NODE, gpios);
+#define LED_PIN 29
 
 int main(void)
 {
-    int ret;
+    const struct device *gpio0 = DEVICE_DT_GET(DT_NODELABEL(gpio0));
 
-    if (!gpio_is_ready_dt(&led)) {
-        printk("Error: LED device is not ready\n");
+    if (!device_is_ready(gpio0)) {
         return 0;
     }
 
-    ret = gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
-    if (ret < 0) {
-        printk("Error: Could not configure LED pin\n");
-        return 0;
-    }
-
-    printk("LED blinking on %s (P0.29)\n", LED_LABEL);
+    gpio_pin_configure(gpio0, LED_PIN, GPIO_OUTPUT);
 
     while (1) {
-        gpio_pin_toggle_dt(&led);
+        gpio_pin_set(gpio0, LED_PIN, 1);
+        k_msleep(500);
+
+        gpio_pin_set(gpio0, LED_PIN, 0);
         k_msleep(500);
     }
 }
