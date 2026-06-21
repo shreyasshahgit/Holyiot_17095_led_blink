@@ -1,0 +1,31 @@
+name: Build Zephyr Firmware
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/zephyrproject-rtos/ci:v0.27.4
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize workspace
+        run: |
+          west init -l .
+          west update
+          west zephyr-export
+
+      - name: Build
+        run: |
+          west build -b nrf52dk/nrf52832 .
+
+      - name: Upload HEX
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: build/zephyr/*.hex
