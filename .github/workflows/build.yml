@@ -10,26 +10,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Zephyr
-        uses: zephyrproject-rtos/action-zephyr-setup@v1
-
-      - name: West Init
+      - name: Install dependencies
         run: |
-          west init -l .
+          sudo apt update
+          sudo apt install -y \
+            git cmake ninja-build gperf \
+            ccache dfu-util device-tree-compiler \
+            wget python3-pip python3-setuptools python3-wheel \
+            xz-utils file make gcc gcc-multilib g++-multilib
+
+      - name: Install West
+        run: |
+          pip3 install west
+
+      - name: Initialize Zephyr
+        run: |
+          west init -m https://github.com/zephyrproject-rtos/zephyr --mr v4.1.0 zephyrproject
+          cd zephyrproject
           west update
           west zephyr-export
 
+      - name: Install Python requirements
+        run: |
+          cd zephyrproject
+          pip3 install -r zephyr/scripts/requirements.txt
+
+      - name: Install Zephyr SDK
+        run: |
+          wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.0/zephyr-sdk-0.17.0_linux-x86_64.tar.xz
+          tar xf zephyr-sdk-0.17.0_linux-x86_64.tar.xz
+          cd zephyr-sdk-0.17.0
+          yes | ./setup.sh
+
+      - name: Copy Application
+        run: |
+          cp -r . zephyrproject/app
+
       - name: Build
         run: |
-          west build -p always -b nrf52dk/nrf52832 .
+          export ZEPHYR_SDK_INSTALL_DIR=$GITHUB_WORKSPACE/zephyr-sdk-0.17.0
+          cd zephyrproject
+          west build -b nrf52dk/nrf52832 app
 
       - name: Upload HEX
         uses: actions/upload-artifact@v4
         with:
           name: firmware
           path: |
-            build/zephyr/zephyr.hex
-            build/zephyr/zephyr.bin
+            zephyrproject/build/zephyr/zephyr.hex
