@@ -10,19 +10,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Setup Zephyr
+      - name: Setup Zephyr Environment
         uses: zephyrproject-rtos/action-zephyr-setup@v1
         with:
           app-path: app
           toolchains: arm-zephyr-eabi
 
-      - name: West Update
-        run: west update --narrow
+      - name: Initialize West
+        run: |
+          west init -l . --mf west.yml
+          west update --narrow
 
-      - name: Build
-        run: west build -b holyiot_yj17095 app --pristine
+      - name: Build Firmware
+        run: |
+          west build -b holyiot_yj17095 app --pristine -d build
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: |
+            build/zephyr/zephyr.hex
+            build/zephyr/zephyr.elf
